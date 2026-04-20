@@ -1,5 +1,5 @@
 
-Simple steps of what  made
+Simple steps of what I made
 
 1. made two parts of the project:
    - Frontend for UI
