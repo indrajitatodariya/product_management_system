@@ -40,7 +40,8 @@ app.use("/auth", authRoutes);
 const __dirname1 = path.resolve();
 
 // If your frontend build folder is inside server/dist
-app.use(express.static(path.join(__dirname1, "dist")));
+app.use(express.static(path.join(__dirname1, "client/dist")));
+
 
 // React routing support
 app.get("*", (req, res) => {
