@@ -1,16 +1,31 @@
 import { useEffect, useState } from "react";
 import { productApi } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 function useProducts(token, setMessage) {
   const [products, setProducts] = useState([]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  
+  const navigate = useNavigate();
+
   const isNumber = (value) => !Number.isNaN(Number(value));
+
+  const handleApiError = (error) => {
+    setMessage(error.message || "An error occurred");
+    if (error.message === "Invalid token" || error.message === "Unauthorized") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
+    }
+  };
 
   const requireLogin = () => {
     if (token) return true;
     setMessage("Please login first");
+    navigate("/login");
     return false;
   };
 
@@ -20,7 +35,7 @@ function useProducts(token, setMessage) {
       const data = await productApi.getAll();
       setProducts(data);
     } catch (error) {
-      setMessage(error.message || "Could not load products");
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -47,65 +62,64 @@ function useProducts(token, setMessage) {
     }
 
     try {
-      await productApi.create({ name, price }, token);
+      if (editingId) {
+        const updatedProduct = await productApi.update(
+          editingId,
+          { name: name.trim(), price: Number(price) },
+          token
+        );
+        setProducts((prevProducts) =>
+          prevProducts.map((item) => (item._id === editingId ? updatedProduct : item))
+        );
+        setMessage("Product updated successfully");
+      } else {
+        await productApi.create({ name: name.trim(), price: Number(price) }, token);
+        setMessage("Product added successfully");
+        fetchProducts();
+      }
+      
       setName("");
       setPrice("");
-      setMessage("Product added");
-      fetchProducts();
+      setEditingId(null);
+      return true;
     } catch (error) {
-      setMessage(error.message || "Failed to add product");
+      handleApiError(error);
+      return false;
     }
   };
 
   const handleDelete = async (id) => {
     if (!requireLogin()) return;
 
+    if (!window.confirm("Are you sure you want to delete this product?")) {
+      return;
+    }
+
     try {
       await productApi.remove(id, token);
       setProducts((prevProducts) =>
         prevProducts.filter((product) => product._id !== id)
       );
+      setMessage("Product deleted successfully");
     } catch (error) {
-      setMessage(error.message || "Could not delete product");
+      handleApiError(error);
     }
   };
 
-  const handleUpdate = async (id) => {
-    if (!requireLogin()) return;
-
+  const startEditing = (id) => {
     const current = products.find((item) => item._id === id);
-    if (!current) return;
-
-    const updatedName = window.prompt("Enter updated product name", current.name);
-    if (updatedName === null) return;
-    if (!updatedName.trim()) {
-      setMessage("Name is required");
-      return;
+    if (current) {
+      setName(current.name);
+      setPrice(String(current.price ?? ""));
+      setEditingId(id);
     }
+  };
 
-    const updatedPrice = window.prompt(
-      "Enter updated price",
-      String(current.price ?? "")
-    );
-    if (updatedPrice === null) return;
-    if (!isNumber(updatedPrice)) {
-      setMessage("Price must be a number");
-      return;
-    }
-
-    try {
-      const updatedProduct = await productApi.update(
-        id,
-        { name: updatedName, price: Number(updatedPrice) },
-        token
-      );
-      setProducts((prevProducts) =>
-        prevProducts.map((item) => (item._id === id ? updatedProduct : item))
-      );
-      setMessage("Product updated");
-    } catch (error) {
-      setMessage(error.message || "Could not update product");
-    }
+  const clearForm = () => {
+    setName("");
+    setPrice("");
+    setEditingId(null);
+    setMessage("");
   };
 
   return {
@@ -113,11 +127,13 @@ function useProducts(token, setMessage) {
     name,
     price,
     loading,
+    editingId,
     setName,
     setPrice,
     handleSubmit,
-    handleUpdate,
+    startEditing,
     handleDelete,
+    clearForm
   };
 }
 

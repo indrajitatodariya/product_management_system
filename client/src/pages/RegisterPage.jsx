@@ -40,32 +40,56 @@ function RegisterPage() {
 
   return (
     <main className="auth-page">
-      <form className="auth-card" onSubmit={handleRegister}>
-        <h1>Register</h1>
-        <input
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Name"
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="Email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="Password"
-        />
-        <button type="submit">Register</button>
-        {message && <p className="message">{message}</p>}
-        <p>
-          Already have account? <Link to="/login">Go to login</Link>
-        </p>
-      </form>
+      <div className="auth-visual">
+        <div className="auth-visual-content">
+          <h2>Product Manager</h2>
+        </div>
+      </div>
+      <div className="auth-form-container">
+        <form className="auth-card" onSubmit={handleRegister}>
+          <div className="auth-header">
+            <h1>Create Account</h1>
+            <p>Sign up to get started.</p>
+          </div>
+
+          <div className="input-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Enter your full name"
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Create a password"
+            />
+          </div>
+
+          <button type="submit" className="primary-btn">Sign Up</button>
+          {message && <div className="message-box error">{message}</div>}
+          
+          <p className="auth-footer">
+            Already have an account? <Link to="/login">Sign in instead</Link>
+          </p>
+        </form>
+      </div>
     </main>
   );
 }
